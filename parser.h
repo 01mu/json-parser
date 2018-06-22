@@ -588,7 +588,7 @@ string json::get_decimal()
         {
             is_neg = true;
         }
-
+        
         index++;
     }
 
