@@ -1,5 +1,5 @@
 # json-parser
-JSON parser written in C++.
+Parses valid JSON and displays values by object/array location.
 ## Parsing a file
 ### Input: json.txt (http://json.org/example.html)
 ```
