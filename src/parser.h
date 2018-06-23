@@ -233,7 +233,6 @@ public:
     * check
     */
 
-    string get_arr_key_str(string & key, string & idx); // get path for value
     void traverse_object(int mode);                     // traverse object and write path to value, 0 = of array, 1 = root object
     void traverse_array(int mode);                      // traverse array
     void reset();                                       // redirect latest pointers to base structures for results.txt output
@@ -1149,7 +1148,7 @@ void json::traverse_array(int mode)
     for (int i = 0; i < array_size; i++)
     {
         string index = to_string(i);
-        string key_string = get_arr_key_str(key, index);
+        string key_string = key + "[" + index + "]";
 
         int type = to_traverse.at(i).type;
 
@@ -1223,29 +1222,6 @@ void json::traverse_array(int mode)
     {
         pop_object_stack();
     }
-}
-
-string json::get_arr_key_str(string & key, string & idx)
-{
-    string key_string;
-
-    if (latest_vector->key.length() > 0)
-    {
-        if (first_type == OBJECT)
-        {
-            key_string = key + "[" + latest_vector->key + "][" + idx + "]";
-        }
-        else
-        {
-            key_string = key + "[" + idx + "]";
-        }
-    }
-    else
-    {
-        key_string = key + "[" + idx + "]";
-    }
-
-    return key_string;
 }
 
 void json::pop_object_stack()
