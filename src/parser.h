@@ -234,7 +234,7 @@ public:
     */
 
     void traverse_object(int mode);                     // traverse object and write path to value, 0 = of array, 1 = root object
-    void traverse_array(int mode);                      // traverse array
+    void traverse_array();                      // traverse array
     void reset();                                       // redirect latest pointers to base structures for results.txt output
     void pop_object_stack();                            // pop path stack
 };
@@ -281,7 +281,7 @@ json::json(string file)
         {
             object_keys_stack.push("");
 
-            traverse_array(0);
+            traverse_array();
         }
 
         key_width += 5;
@@ -1116,15 +1116,7 @@ void json::traverse_object(int mode)
                 string mod = object_keys_stack.top();
                 object_keys_stack.push(mod + "[" + idx + "]");
 
-                if (mode == 0)
-                {
-                    traverse_array(0);
-                    pop_object_stack();
-                }
-                else
-                {
-                    traverse_array(1);
-                }
+                traverse_array();
                 
                 break;
             }
@@ -1138,7 +1130,7 @@ void json::traverse_object(int mode)
     }
 }
 
-void json::traverse_array(int mode)
+void json::traverse_array()
 {
     string key = object_keys_stack.top();
     json_vector to_traverse = latest_vector->array;
@@ -1183,7 +1175,7 @@ void json::traverse_array(int mode)
 
             object_keys_stack.push(key_string);
 
-            traverse_array(0);
+            traverse_array();
             pop_object_stack();
             break;
         }
@@ -1216,12 +1208,9 @@ void json::traverse_array(int mode)
         }
     }
 
-    latest_vector = latest_vector->parent;
+    pop_object_stack();
 
-    if (mode == 1)
-    {
-        pop_object_stack();
-    }
+    latest_vector = latest_vector->parent;
 }
 
 void json::pop_object_stack()
