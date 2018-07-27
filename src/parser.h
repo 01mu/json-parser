@@ -7,10 +7,6 @@
 * github.com/01mu
 */
 
-#pragma once
-
-#include "stdafx.h"
-
 #include <ctype.h>
 #include <vector>
 #include <map>
@@ -20,83 +16,66 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
+#include <memory>
 
-#define NUMBER 0
-#define OBJECT 1
-#define ARRAY 2
-#define STRING 3
-#define NULL 4
-#define BOOL 5
+const int NUMBER = 0;
+const int OBJECT = 1;
+const int ARRAY = 2;
+const int STRING = 3;
+const int NULL_ = 4;
+const int BOOL = 5;
 
 using namespace std;
-
-/*
-* forward declarations
-*/
 
 class json;
 struct json_object;
 struct json_array;
 
-/*
-* json_vector data type
-*/
-
 struct json_array_item
 {
     int type;
 
-    union
-    {
-        json_object * object;
-        json_array * array;
-        int * null;
-        bool * boolean;
-        double * double_val;
-        string * string_val;
-    } value;
+    shared_ptr<json_object> object_val;
+    shared_ptr<json_array> array_val;
+    int null_val;
+    bool bool_val;
+    double double_val;
+    string string_val;
 };
 
-/*
-* typedef
-*/
+typedef vector<shared_ptr<json_array_item>> json_vector;
 
-typedef vector<json_array_item> json_vector;
-
-typedef pair<string, json_array *> pair_array;
+typedef pair<string, shared_ptr<json_array>> pair_array;
 typedef pair<string, string> pair_string;
 typedef pair<string, int> pair_null;
 typedef pair<string, double> pair_number;
 typedef pair<string, bool> pair_bool;
-typedef pair<string, json_object *> pair_object;
+typedef pair<string, shared_ptr<json_object>> pair_object;
 
-typedef map<string, json_array *> map_array;
+typedef map<string, shared_ptr<json_array>> map_array;
 typedef map<string, string> map_string;
 typedef map<string, int> map_null;
 typedef map<string, double> map_number;
 typedef map<string, bool> map_bool;
-typedef map<string, json_object *> map_object;
-
-/*
-* json array
-*/
+typedef map<string, shared_ptr<json_object>> map_object;
 
 struct json_array
 {
     string key;
-    json_array * parent;
+    shared_ptr<json_array> * parent;
     json_vector array;
 };
-
-/*
-* json object
-*/
 
 struct json_object
 {
     string key;
-    json_object * parent;
-    vector<string> array_keys, string_keys, null_keys, number_keys, boolean_keys, object_keys;
+    shared_ptr<json_object> * parent;
+    vector<string> array_keys;
+    vector<string> string_keys;
+    vector<string> null_keys;
+    vector<string> number_keys;
+    vector<string> boolean_keys;
+    vector<string> object_keys;
     map_array arrays;
     map_string strings;
     map_null nulls;
@@ -105,138 +84,109 @@ struct json_object
     map_object objects;
 };
 
-/*
-* file
-*/
-
-ofstream fout("results.txt");
-
-/*
-* class
-*/
+ofstream fout("results");
 
 class json
 {
 private:
-    /*
-    * parsing variables
-    */
+    string json_output = "";
 
-    int index = 0;                                      // index position for parsing
-    string file;                                        // file name
-    string json_text;                                   // json text to parse
+    int index = 0;
 
-    int array_depth_max = 0;                            // max array depth
-    int array_depth = 0;                                // current array depth
+    string file;
+    string json_text;
 
-    int object_depth_max = 0;                           // max object depth
-    int object_depth = 0;                               // current object depth
+    int array_depth_max = 0;
+    int array_depth = 0;
 
-    int len;                                            // file length
+    int object_depth_max = 0;
+    int object_depth = 0;
 
-    int WIDTH = 35;                                     // width between key and value
-    int NUM_WIDTH = 30;                                 // width between depths
-    int JWIDTH = 15;                                    // final width
-    int key_width = 0;                                  // width between location and value
+    int len;
 
-    int string_count = 0;                               // string count
-    int bool_count = 0;                                 // bool count
-    int array_count = 0;                                // array count
-    int object_count = 0;                               // object count
-    int decimal_count = 0;                              // decimal count
-    int key_count = 0;                                  // key count
-    int parse_count = 0;                                // parse function call count
-    int null_count = 0;                                 // null count
+    int WIDTH = 35;
+    int NUM_WIDTH = 30;
+    int JWIDTH = 15;
+    int key_width = 0;
 
-    /*
-    * data variables
-    */
+    int string_count = 0;
+    int bool_count = 0;
+    int array_count = 0;
+    int object_count = 0;
+    int decimal_count = 0;
+    int key_count = 0;
+    int parse_count = 0;
+    int null_count = 0;
 
-    json_object * base_object = new json_object;        // first object
-    json_array * base_vector = new json_array;          // first vector
+    shared_ptr<json_object> base_object;
+    shared_ptr<json_array> base_vector;
 
-    json_object * latest_object;                        // most recent object where parsed values will be assigned
-    json_array * latest_vector;                         // most recent vector
+    shared_ptr<json_object> latest_object;
+    shared_ptr<json_array> latest_vector;
 
-    stack<string> object_keys_stack;                    // path stack helper
+    stack<string> object_keys_stack;
 
-    string last_obj_key;                                // used for path
-    string last_key_name;                               // reference to last key for value storage
+    string last_obj_key;
+    string last_key_name;
 
-    map<string, string> final_map;                      // map in which locations and values are stored
-    vector<string> locations;                           // key names
+    map<string, string> final_map;
+    vector<string> locations;
 
-    bool first_object = 0;                              // used to track initialization of base object
-    bool first_vector = 0;                              // base vector
+    bool first_object = 0;
+    bool first_vector = 0;
 
-    int first_type = 0;                                 // whether the file is contained as an array or object
+    int first_type = 0;
 
 public:
-    /*
-    * constructor 
-    */
+    json(string file);
 
-    json(string file);                                  // parse file, assign to final map, and print results.txt
+    void parse();
+    void check_key();
+    void show_title();
+    void show_stats();
 
-    /*
-    * parsing functions
-    */
+    string get_file(string file_name);
+    string get_string();
+    string get_boolean(char type);
+    string get_decimal();
 
-    void parse();                                       // main function to parse json objects
-    void check_key();                                   // parse value derived from value key
-    void show_title();                                  // write to results.txt
-    void show_stats();                                  // show counts and write to results.txt
+    void remove_blank_leading();
+    void remove_blank_trail();
+    bool remove_blank();
 
-    string get_file(string file_name);                  // get file name
-    string get_string();                                // parse string (for key or string value)
-    string get_boolean(char type);                      // parse bool
-    string get_decimal();                               // parse decimal
+    void update_arr_depth(char type);
+    void update_obj_depth(char type);
+    string make_ellipses(string str, char type);
+    string get(string location);
 
-    void remove_blank_leading();                        // remove leading blanks from string input
-    void remove_blank_trail();                          // remove trailing blanks
-    bool remove_blank();                                // remove blanks encountered during parsing
+    void update_display_width(string key);
 
-    void update_arr_depth(char type);                   // update array depth
-    void update_obj_depth(char type);                   // update object depth
-    string make_ellipses(string str, char type);        // compress long strings to fit formatting
-    string get(string location);                        // get from final map
+    void add_object(string key);
+    void add_string(string key, string value);
+    void add_number(string key, double value);
+    void add_boolean(string key, bool value);
+    void add_array(string key);
+    void add_null(string key);
 
-    void update_display_width(string key);              // update fout width
+    void end_object();
 
-    /*
-    * for objects
-    */
+    void arr_add_object();
+    void arr_add_string(string value);
+    void arr_add_number(double value);
+    void arr_add_boolean(bool value);
+    void arr_add_array();
+    void arr_add_null();
 
-    void add_object(string key);                        // add object to current object
-    void add_string(string key, string value);          // add string to current object
-    void add_number(string key, double value);          // add number to current object
-    void add_boolean(string key, bool value);           // add boolean to current object
-    void add_array(string key);                         // add array structure to current object
-    void add_null(string key);                          // add null to current object
+    void end_array();
 
-    void end_object();                                  // point back to object's parent when parsing of it ends
+    void traverse_object(int mode);
+    void traverse_array();
+    void reset();
+    void pop_object_stack();
 
-    /*
-    * for arrays
-    */
-
-    void arr_add_object();                              // add object to current array
-    void arr_add_string(string value);                  // add string to current array
-    void arr_add_number(double value);                  // add number to current array
-    void arr_add_boolean(bool value);                   // add bool to current array
-    void arr_add_array();                               // add array to current array
-    void arr_add_null();                                // add null to current array
-
-    void end_array();                                   // point back to array's parent when parsing of it ends
-
-    /*
-    * check
-    */
-
-    void traverse_object(int mode);                     // traverse object and write path to value, 0 = of array, 1 = root object
-    void traverse_array();                      // traverse array
-    void reset();                                       // redirect latest pointers to base structures for results.txt output
-    void pop_object_stack();                            // pop path stack
+    void output_json_file();
+    void output_json_obj();
+    void output_json_arr();
 };
 
 json::json(string file)
@@ -255,9 +205,9 @@ json::json(string file)
 
     char next = json_text.at(index);
 
-    if (next == '[' || next == '{')
+    if(next == '[' || next == '{')
     {
-        if (next == '[')
+        if(next == '[')
         {
             first_type = ARRAY;
         }
@@ -266,14 +216,14 @@ json::json(string file)
             first_type = OBJECT;
         }
 
-        while (index != len)
+        while(index != len)
         {
             parse();
         }
 
         reset();
 
-        if (first_type == OBJECT)
+        if(first_type == OBJECT)
         {
             traverse_object(0);
         }
@@ -286,13 +236,20 @@ json::json(string file)
 
         key_width += 5;
 
-        fout << endl << "------------------------------------------------------------------------------------------------------------------------" << endl << endl;
-        fout << setw(key_width) << "- Location -" << "- Value -" << endl << endl;
+        fout << endl << "--------------------------------"
+            "--------------------------------------------"
+            "--------------------------------------------"
+            << endl << endl;
 
-        for (int i = 0; i < final_map.size(); i++)
+        fout << setw(key_width) << "- Location -" << "- Value -"
+            << endl << endl;
+
+        for(int i = 0; i < final_map.size(); i++)
         {
             string location = locations.at(i);
-            fout << setw(key_width) << location << final_map.at(location) << endl;
+
+            fout << setw(key_width) << location << final_map.at(location)
+                << endl;
         }
 
         show_stats();
@@ -301,6 +258,8 @@ json::json(string file)
     {
         fout << json_text;
     }
+
+    reset();
 }
 
 void json::parse()
@@ -309,21 +268,22 @@ void json::parse()
 
     char next = json_text.at(index);
 
-    if (next == ':')
+    if(next == ':')
     {
         check_key();
     }
-    else if (isdigit(next) || next == '-' || next == '+' || next == '.')
+    else if(isdigit(next) || next == '-' || next == '+' || next == '.')
     {
         string value = get_decimal();
 
         decimal_count++;
 
-        fout << setw(WIDTH) << " " << setw(WIDTH) << value << setw(NUM_WIDTH) << " " << setw(NUM_WIDTH) << " " << endl;
+        fout << setw(WIDTH) << " " << setw(WIDTH) << value << setw(NUM_WIDTH)
+            << " " << setw(NUM_WIDTH) << " " << endl;
 
         arr_add_number(stod(value));
     }
-    else if (next == 'n')
+    else if(next == 'n')
     {
         null_count++;
         index = index + 4;
@@ -332,31 +292,33 @@ void json::parse()
 
         arr_add_null();
     }
-    else if (next == 't')
+    else if(next == 't')
     {
         string str = get_boolean('t');
 
         bool_count++;
 
-        fout << setw(WIDTH) << " " << setw(WIDTH) << str << setw(NUM_WIDTH) << " " << setw(NUM_WIDTH) << " " << endl;
+        fout << setw(WIDTH) << " " << setw(WIDTH) << str << setw(NUM_WIDTH)
+            << " " << setw(NUM_WIDTH) << " " << endl;
 
         arr_add_boolean(true);
     }
-    else if (next == 'f')
+    else if(next == 'f')
     {
         string str = get_boolean('f');
 
         bool_count++;
 
-        fout << setw(WIDTH) << " " << setw(WIDTH) << str << setw(NUM_WIDTH) << " " << setw(NUM_WIDTH) << " " << endl;
+        fout << setw(WIDTH) << " " << setw(WIDTH) << str << setw(NUM_WIDTH)
+            << " "<< setw(NUM_WIDTH) << " " << endl;
 
         arr_add_boolean(false);
     }
-    else if (next == '"')
+    else if(next == '"')
     {
         string str = get_string();
 
-        if (json_text.at(index) == ':')
+        if(json_text.at(index) == ':')
         {
             key_count++;
 
@@ -373,53 +335,57 @@ void json::parse()
             arr_add_string(str);
         }
     }
-    else if (next == '{')
+    else if(next == '{')
     {
         index++;
         object_count++;
 
         update_obj_depth('i');
 
-        fout << setw(WIDTH) << " " << setw(WIDTH) << "{object start}" << setw(NUM_WIDTH) << array_depth << object_depth << endl;
+        fout << setw(WIDTH) << " " << setw(WIDTH) << "{object start}"
+            << setw(NUM_WIDTH) << array_depth << object_depth << endl;
 
         arr_add_object();
     }
-    else if (next == '}')
+    else if(next == '}')
     {
         index++;
 
         update_obj_depth('d');
 
-        fout << setw(WIDTH) << " " << setw(WIDTH) << "{object end}" << setw(NUM_WIDTH) << array_depth << object_depth << endl;
+        fout << setw(WIDTH) << " " << setw(WIDTH) << "{object end}"
+            << setw(NUM_WIDTH) << array_depth << object_depth << endl;
 
         end_object();
     }
-    else if (next == '[')
+    else if(next == '[')
     {
         index++;
         array_count++;
 
         update_arr_depth('i');
 
-        fout << setw(WIDTH) << " " << setw(WIDTH) << "[array start]" << setw(NUM_WIDTH) << array_depth << object_depth << endl;
+        fout << setw(WIDTH) << " " << setw(WIDTH) << "[array start]"
+            << setw(NUM_WIDTH) << array_depth << object_depth << endl;
 
         arr_add_array();
     }
-    else if (next == ']')
+    else if(next == ']')
     {
         index++;
 
         update_arr_depth('d');
 
-        fout << setw(WIDTH) << " " << setw(WIDTH) << "[array end]" << setw(NUM_WIDTH) << array_depth << object_depth << endl;
+        fout << setw(WIDTH) << " " << setw(WIDTH) << "[array end]"
+            << setw(NUM_WIDTH) << array_depth << object_depth << endl;
 
         end_array();
     }
-    else if (next == '\n' || next == ' ' || next == '\t')
+    else if(next == '\n' || next == ' ' || next == '\t')
     {
         index++;
     }
-    else if (next == ',')
+    else if(next == ',')
     {
         index++;
     }
@@ -433,37 +399,40 @@ void json::check_key()
 
     char next = json_text.at(index);
 
-    if (next == '"')
+    if(next == '"')
     {
         string str = get_string();
 
         string_count++;
 
-        fout << setw(WIDTH) << make_ellipses(str, 'v') << setw(NUM_WIDTH) << " " << setw(JWIDTH) << " " << endl;
+        fout << setw(WIDTH) << make_ellipses(str, 'v') << setw(NUM_WIDTH)
+            << " " << setw(JWIDTH) << " " << endl;
 
         add_string(last_key_name, str);
     }
-    else if (next == 't')
+    else if(next == 't')
     {
         string str = get_boolean('t');
 
         bool_count++;
 
-        fout << setw(WIDTH) << str << setw(NUM_WIDTH) << " " << setw(JWIDTH) << " " << endl;
+        fout << setw(WIDTH) << str << setw(NUM_WIDTH) << " " << setw(JWIDTH)
+            << " " << endl;
 
         add_boolean(last_key_name, true);
     }
-    else if (next == 'f')
+    else if(next == 'f')
     {
         string str = get_boolean('f');
 
         bool_count++;
 
-        fout << setw(WIDTH) << str << setw(NUM_WIDTH) << " " << setw(JWIDTH) << " " << endl;
+        fout << setw(WIDTH) << str << setw(NUM_WIDTH) << " " << setw(JWIDTH)
+            << " " << endl;
 
         add_boolean(last_key_name, false);
     }
-    else if (next == 'n')
+    else if(next == 'n')
     {
         null_count++;
         index = index + 4;
@@ -472,39 +441,42 @@ void json::check_key()
 
         add_null(last_key_name);
     }
-    else if (isdigit(next) || next == '-' || next == '+' || next == '.')
+    else if(isdigit(next) || next == '-' || next == '+' || next == '.')
     {
         string value = get_decimal();
 
         decimal_count++;
 
-        fout << setw(WIDTH) << value << setw(NUM_WIDTH) << " " << setw(JWIDTH) << " " << endl;
+        fout << setw(WIDTH) << value << setw(NUM_WIDTH) << " "
+            << setw(JWIDTH) << " " << endl;
 
         add_number(last_key_name, stod(value));
     }
-    else if (next == '{')
+    else if(next == '{')
     {
         object_count++;
         index++;
 
         update_obj_depth('i');
 
-        fout << setw(WIDTH) << "{object start}" << setw(NUM_WIDTH) << array_depth << object_depth << endl;
+        fout << setw(WIDTH) << "{object start}" << setw(NUM_WIDTH)
+            << array_depth << object_depth << endl;
 
         add_object(last_key_name);
     }
-    else if (next == '[')
+    else if(next == '[')
     {
         array_count++;
         index++;
 
         update_arr_depth('i');
 
-        fout << "" << setw(WIDTH) << "[array start]" << setw(NUM_WIDTH) << array_depth << object_depth << endl;
+        fout << "" << setw(WIDTH) << "[array start]" << setw(NUM_WIDTH)
+            << array_depth << object_depth << endl;
 
         add_array(last_key_name);
     }
-    else if (next == '\n' || next == ' ' || next == '\t')
+    else if(next == '\n' || next == ' ' || next == '\t')
     {
         check_key();
     }
@@ -533,14 +505,15 @@ string json::get_string()
     char prev_char = '\\';
     int qc = 0;
 
-    while (prev_char == '\\') {
+    while(prev_char == '\\')
+    {
         char check = json_text.at(index);
 
         quote_count++;
 
-        if (check == '"')
+        if(check == '"')
         {
-            if (qc > 0)
+            if(qc > 0)
             {
                 prev_char = json_text.at(index - 1);
             }
@@ -558,7 +531,7 @@ string json::get_boolean(char type)
 {
     string return_string;
 
-    if (type == 't')
+    if(type == 't')
     {
         return_string = json_text.substr(index, 4);
         index = index + 4;
@@ -579,24 +552,26 @@ string json::get_decimal()
 
     char num_char = json_text.at(start);
 
-    bool is_neg;
+    bool is_neg = false;
 
-    if (json_text.at(index) == '-' || json_text.at(index) == '+')
+    if(json_text.at(index) == '-' || json_text.at(index) == '+')
     {
-        if (json_text.at(index) == '-')
+        if(json_text.at(index) == '-')
         {
             is_neg = true;
         }
-        
+
         index++;
     }
 
     start = index;
     num_char = json_text.at(start);
 
-    if (json_text.at(index) == '0' && json_text.at(index + 1) != 0 && isdigit(json_text.at(index + 1)))
+    char next = json_text.at(index + 1);
+
+    if(json_text.at(index) == '0' &&  next != 0 && isdigit(next))
     {
-        while (num_char == '0')
+        while(num_char == '0')
         {
             index++;
             start++;
@@ -605,7 +580,7 @@ string json::get_decimal()
         }
     }
 
-    while (isdigit(num_char))
+    while(isdigit(num_char))
     {
         index++;
 
@@ -614,11 +589,11 @@ string json::get_decimal()
         offset++;
     }
 
-    if (json_text.at(index) == '.')
+    if(json_text.at(index) == '.')
     {
         num_char = json_text.at(index + 1);
 
-        while (isdigit(num_char))
+        while(isdigit(num_char))
         {
             index++;
 
@@ -628,12 +603,12 @@ string json::get_decimal()
         }
     }
 
-    if (json_text.at(index) == 'e')
+    if(json_text.at(index) == 'e')
     {
         index++;
         offset++;
 
-        if (json_text.at(index) == '-' || json_text.at(index) == '+')
+        if(json_text.at(index) == '-' || json_text.at(index) == '+')
         {
             index++;
             offset++;
@@ -641,7 +616,7 @@ string json::get_decimal()
 
         num_char = json_text.at(index);
 
-        while (isdigit(num_char))
+        while(isdigit(num_char))
         {
             index++;
 
@@ -653,7 +628,7 @@ string json::get_decimal()
 
     string ret = json_text.substr(start, offset);
 
-    if (is_neg == true)
+    if(is_neg == true)
     {
         ret = "-" + json_text.substr(start, offset);
     }
@@ -665,15 +640,15 @@ bool json::remove_blank()
 {
     bool found = false;
 
-    if (index + 1 < len)
+    if(index + 1 < len)
     {
-        char space_check = json_text.at(index);
+        char check = json_text.at(index);
 
-        while (isspace(space_check) || space_check == '\n' || space_check == '\t')
+        while(isspace(check) || check == '\n' || check == '\t')
         {
             index++;
 
-            space_check = json_text.at(index);
+            check = json_text.at(index);
 
             found = true;
         }
@@ -684,44 +659,60 @@ bool json::remove_blank()
 
 void json::remove_blank_leading()
 {
-    char space_check = json_text.at(index);
+    char check = json_text.at(index);
 
-    while (isspace(space_check) || space_check == '\n' || space_check == '\t')
+    while(isspace(check) || check == '\n' || check == '\t')
     {
         index++;
 
-        space_check = json_text.at(index);
+        check = json_text.at(index);
     }
 }
 
 void json::remove_blank_trail()
 {
-    char space_check = json_text.at(len - 1);
+    char check = json_text.at(len - 1);
 
-    while (space_check == ' ' || space_check == '\n' || space_check == '\t')
+    while(check == ' ' || check == '\n' || check == '\t')
     {
         len--;
 
-        space_check = json_text.at(len);
+        check = json_text.at(len);
     }
 }
 
 void json::show_title()
 {
-    fout << "------------------------------------------------------------------------------------------------------------------------" << endl << endl;
+    fout << "----------------------------------------------------------"
+        "--------------------------------------------------------------"
+        << endl << endl;
+
     fout << "JSON Parser" << endl;
     fout << "Version 0.1" << endl << endl;
     fout << "Parses valid JSON." << endl << endl;
-    fout << "------------------------------------------------------------------------------------------------------------------------" << endl << endl;
+
+    fout << "----------------------------------------------------------"
+        "--------------------------------------------------------------"
+        << endl << endl;
+
     fout << "File: " << file << endl;
     fout << "Length: " << len << endl << endl;
-    fout << "------------------------------------------------------------------------------------------------------------------------" << endl << endl;
-    fout << setw(WIDTH) << "- Key -" << setw(WIDTH) << "- Value -" << setw(NUM_WIDTH) << "- Array Depth -" << "- Object Depth -" << endl << endl;
+
+    fout << "----------------------------------------------------------"
+        "--------------------------------------------------------------"
+        << endl << endl;
+
+    fout << setw(WIDTH) << "- Key -" << setw(WIDTH) << "- Value -"
+        << setw(NUM_WIDTH) << "- Array Depth -" << "- Object Depth -"
+        << endl << endl;
 }
 
 void json::show_stats()
 {
-    fout << endl << "------------------------------------------------------------------------------------------------------------------------" << endl << endl;
+    fout << endl << "------------------------------------------------------"
+        "------------------------------------------------------------------"
+        << endl << endl;
+
     fout << setw(WIDTH) << "Key count: " << setw(WIDTH) << key_count;
     fout << setw(WIDTH) << "Decimal count: " << decimal_count << endl;
     fout << setw(WIDTH) << "Object count: " << setw(WIDTH) << object_count;
@@ -732,16 +723,19 @@ void json::show_stats()
     fout << setw(WIDTH) << "Max object depth: " << object_depth_max << endl;
     fout << setw(WIDTH) << "Null count: " << setw(WIDTH) << null_count;
     fout << setw(WIDTH) << "Parse count: " << parse_count << endl << endl;
-    fout << "------------------------------------------------------------------------------------------------------------------------" << endl;
+
+    fout << "----------------------------------------------------------"
+        "--------------------------------------------------------------"
+        << endl << endl;
 }
 
 void json::update_obj_depth(char type)
 {
-    if (type == 'i')
+    if(type == 'i')
     {
         object_depth++;
 
-        if (object_depth > object_depth_max)
+        if(object_depth > object_depth_max)
         {
             object_depth_max = object_depth;
         }
@@ -754,11 +748,11 @@ void json::update_obj_depth(char type)
 
 void json::update_arr_depth(char type)
 {
-    if (type == 'i')
+    if(type == 'i')
     {
         array_depth++;
 
-        if (array_depth > array_depth_max)
+        if(array_depth > array_depth_max)
         {
             array_depth_max = array_depth;
         }
@@ -773,11 +767,11 @@ string json::make_ellipses(string str, char type)
 {
     string res;
 
-    if (type == 'v')
+    if(type == 'v')
     {
         int max = WIDTH - 6;
 
-        if ((int)str.length() > max)
+        if((int)str.length() > max)
         {
             res = "\"" + str.substr(0, max) + "...\"";
         }
@@ -790,7 +784,7 @@ string json::make_ellipses(string str, char type)
     {
         int max = WIDTH - 5;
 
-        if ((int)str.length() > max)
+        if((int)str.length() > max)
         {
             res = str.substr(0, max) + "...:";
         }
@@ -805,24 +799,24 @@ string json::make_ellipses(string str, char type)
 
 void json::end_object()
 {
-    if (latest_object->parent)
+    if(latest_object->parent)
     {
-        latest_object = latest_object->parent;
+        latest_object = *latest_object->parent;
     }
 }
 
 void json::end_array()
 {
-    if (latest_vector->parent)
+    if(latest_vector->parent)
     {
-        latest_vector = latest_vector->parent;
+        latest_vector = *latest_vector->parent;
     }
 }
 
 void json::add_object(string key)
 {
-    json_object * newest = new json_object;
-    newest->parent = latest_object;
+    shared_ptr<json_object> newest (new json_object);
+    newest->parent = &latest_object;
     newest->key = key;
 
     latest_object->object_keys.push_back(key);
@@ -851,8 +845,8 @@ void json::add_boolean(string key, bool value)
 
 void json::add_array(string key)
 {
-    json_array * newest = new json_array;
-    newest->parent = latest_vector;
+    shared_ptr<json_array> newest (new json_array);
+    newest->parent = &latest_vector;
     newest->key = key;
 
     latest_object->array_keys.push_back(key);
@@ -867,22 +861,64 @@ void json::add_null(string key)
     latest_object->nulls.insert(pair_bool(key, 0));
 }
 
+void json::arr_add_string(string value)
+{
+    shared_ptr<json_array_item> temp (new json_array_item);
+
+    temp->type = STRING;
+    temp->string_val = value;
+
+    latest_vector->array.push_back(temp);
+}
+
+void json::arr_add_number(double value)
+{
+    shared_ptr<json_array_item> temp (new json_array_item);
+
+    temp->type = NUMBER;
+    temp->double_val = value;
+
+    latest_vector->array.push_back(temp);
+}
+
+void json::arr_add_boolean(bool value)
+{
+    shared_ptr<json_array_item> temp (new json_array_item);
+
+    temp->type = BOOL;
+    temp->bool_val = value;
+
+    latest_vector->array.push_back(temp);
+}
+
+void json::arr_add_null()
+{
+    shared_ptr<json_array_item> temp (new json_array_item);
+
+    temp->type = NULL_;
+    temp->null_val = 0;
+
+    latest_vector->array.push_back(temp);
+}
+
 void json::arr_add_object()
 {
-    if (!first_object && first_type == OBJECT)
+    if(first_object == 0 && first_type == OBJECT)
     {
-        latest_object = base_object;
+        shared_ptr<json_object> bo (new json_object);
+        latest_object = bo;
+        base_object = bo;
         first_object = 1;
     }
     else
     {
-        json_object * newest = new json_object;
-        newest->parent = latest_object;
+        shared_ptr<json_object> newest (new json_object);
+        newest->parent = &latest_object;
 
-        json_array_item temp;
+        shared_ptr<json_array_item> temp (new json_array_item);
 
-        temp.type = OBJECT;
-        temp.value.object = newest;
+        temp->type = OBJECT;
+        temp->object_val = newest;
 
         latest_vector->array.push_back(temp);
 
@@ -890,61 +926,24 @@ void json::arr_add_object()
     }
 }
 
-void json::arr_add_string(string value)
-{
-    string * put = new string;
-    *put = value;
-
-    json_array_item temp;
-
-    temp.type = STRING;
-    temp.value.string_val = put;
-
-    latest_vector->array.push_back(temp);
-}
-
-void json::arr_add_number(double value)
-{
-    double * put = new double;
-    *put = value;
-
-    json_array_item temp;
-
-    temp.type = NUMBER;
-    temp.value.double_val = put;
-
-    latest_vector->array.push_back(temp);
-}
-
-void json::arr_add_boolean(bool value)
-{
-    bool * put = new bool;
-    *put = value;
-
-    json_array_item temp;
-
-    temp.type = BOOL;
-    temp.value.boolean = put;
-
-    latest_vector->array.push_back(temp);
-}
-
 void json::arr_add_array()
 {
-    if (!first_vector && first_type == ARRAY)
+    if(first_vector == 0 && first_type == ARRAY)
     {
-        latest_vector = base_vector;
+        shared_ptr<json_array> bv (new json_array);
+        latest_vector = bv;
+        base_vector = bv;
         first_vector = 1;
     }
     else
     {
-        json_array * newest = new json_array;
-        newest->parent = latest_vector;
+        shared_ptr<json_array> newest (new json_array);
+        newest->parent = &latest_vector;
 
-        json_array_item temp;
+        shared_ptr<json_array_item> temp (new json_array_item);
 
-        temp.type = ARRAY;
-        temp.value.array = newest;
+        temp->type = ARRAY;
+        temp->array_val = newest;
 
         latest_vector->array.push_back(temp);
 
@@ -952,28 +951,18 @@ void json::arr_add_array()
     }
 }
 
-void json::arr_add_null()
-{
-    int * put = new int;
-    *put = 0;
-
-    json_array_item temp;
-
-    temp.type = NULL;
-    temp.value.null = put;
-
-    latest_vector->array.push_back(temp);
-}
-
 void json::traverse_object(int mode)
 {
     string last_key = "";
 
-    if (latest_object->key.length() > 0)
+    if(latest_object->key.length() > 0)
     {
-        if (object_keys_stack.size() > 0)
+        if(object_keys_stack.size() > 0)
         {
-            last_key = object_keys_stack.top() + "[" + latest_object->key + "]";
+            string stack_top = object_keys_stack.top();
+            string key = latest_object->key;
+
+            last_key = stack_top + "[" + key + "]";
         }
         else
         {
@@ -1004,16 +993,16 @@ void json::traverse_object(int mode)
 
     string res = "";
 
-    if (mode == 0)
+    if(mode == 0)
     {
         object_keys_stack.push(last_key);
     }
 
-    for (int i = 0; i < 6; i++)
+    for(int i = 0; i < 6; i++)
     {
         int check;
 
-        switch (i)
+        switch(i)
         {
         case(STRING):
         {
@@ -1030,7 +1019,7 @@ void json::traverse_object(int mode)
             check = bool_count;
             break;
         }
-        case(NULL):
+        case(NULL_):
         {
             check = null_count;
             break;
@@ -1047,12 +1036,12 @@ void json::traverse_object(int mode)
         }
         }
 
-        for (int j = 0; j < check; j++)
+        for(int j = 0; j < check; j++)
         {
             string idx;
             string key = object_keys_stack.top();
 
-            switch (i)
+            switch(i)
             {
             case(STRING):
             {
@@ -1087,7 +1076,7 @@ void json::traverse_object(int mode)
                 update_display_width(key_string);
                 break;
             }
-            case(NULL):
+            case(NULL_):
             {
                 idx = null_keys.at(j);
 
@@ -1105,7 +1094,7 @@ void json::traverse_object(int mode)
 
                 traverse_object(0);
 
-                latest_object = latest_object->parent;
+                latest_object = *latest_object->parent;
                 break;
             }
             case(ARRAY):
@@ -1117,14 +1106,13 @@ void json::traverse_object(int mode)
                 object_keys_stack.push(mod + "[" + idx + "]");
 
                 traverse_array();
-                
                 break;
             }
             }
         }
     }
 
-    if (mode == 0)
+    if(mode == 0)
     {
         pop_object_stack();
     }
@@ -1137,18 +1125,19 @@ void json::traverse_array()
 
     int array_size = latest_vector->array.size();
 
-    for (int i = 0; i < array_size; i++)
+    for(int i = 0; i < array_size; i++)
     {
         string index = to_string(i);
         string key_string = key + "[" + index + "]";
 
-        int type = to_traverse.at(i).type;
+        json_array_item item = *to_traverse.at(i);
+        int type = item.type;
 
-        switch (type)
+        switch(type)
         {
         case(NUMBER):
         {
-            double number = *to_traverse.at(i).value.double_val;
+            double number = item.double_val;
             string value = to_string(number);
 
             final_map.insert(pair<string, string>(key_string, value));
@@ -1157,7 +1146,7 @@ void json::traverse_array()
         }
         case(OBJECT):
         {
-            json_object * object = to_traverse.at(i).value.object;
+            shared_ptr<json_object> object = item.object_val;
             latest_object = object;
 
             object_keys_stack.push(key + "[" + index + "]");
@@ -1165,31 +1154,29 @@ void json::traverse_array()
             traverse_object(1);
             pop_object_stack();
 
-            latest_object = latest_object->parent;
+            latest_object = *latest_object->parent;
             break;
         }
         case(ARRAY):
         {
-            json_array * array = to_traverse.at(i).value.array;
+            shared_ptr<json_array> array = item.array_val;
             latest_vector = array;
-
             object_keys_stack.push(key_string);
 
             traverse_array();
-            pop_object_stack();
             break;
         }
         case(STRING):
         {
-            string value = *to_traverse.at(i).value.string_val;
+            string value = item.string_val;
 
             final_map.insert(pair<string, string>(key_string, value));
             update_display_width(key_string);
             break;
         }
-        case(NULL):
+        case(NULL_):
         {
-            int null = *to_traverse.at(i).value.null;
+            int null = item.null_val;
             string value = to_string(null);
 
             final_map.insert(pair<string, string>(key_string, value));
@@ -1198,7 +1185,7 @@ void json::traverse_array()
         }
         case(BOOL):
         {
-            int boolean = *to_traverse.at(i).value.boolean;
+            int boolean = item.bool_val;
             string value = to_string(boolean);
 
             final_map.insert(pair<string, string>(key_string, value));
@@ -1210,12 +1197,15 @@ void json::traverse_array()
 
     pop_object_stack();
 
-    latest_vector = latest_vector->parent;
+    if(latest_vector->parent)
+    {
+        latest_vector = *latest_vector->parent;
+    }
 }
 
 void json::pop_object_stack()
 {
-    if (object_keys_stack.size() > 0)
+    if(object_keys_stack.size() > 0)
     {
         object_keys_stack.pop();
     }
@@ -1231,7 +1221,7 @@ void json::update_display_width(string key)
 {
     int new_width = key.length();
 
-    if (new_width > key_width)
+    if(new_width > key_width)
     {
         key_width = new_width;
     }
@@ -1242,4 +1232,251 @@ void json::update_display_width(string key)
 string json::get(string location)
 {
     return final_map.at(location);
+}
+
+void json::output_json_file()
+{
+    if(first_type == OBJECT)
+    {
+        json_output += "{";
+
+        output_json_obj();
+
+        json_output += "}";
+    }
+    else
+    {
+        json_output += "[";
+
+        output_json_arr();
+
+        json_output += "]";
+    }
+
+    std::ofstream out("json_new");
+
+    out << json_output;
+    out.close();
+}
+
+void json::output_json_obj()
+{
+    vector<string> string_keys = latest_object->string_keys;
+    vector<string> number_keys = latest_object->number_keys;
+    vector<string> bool_keys = latest_object->boolean_keys;
+    vector<string> null_keys = latest_object->null_keys;
+    vector<string> object_keys = latest_object->object_keys;
+    vector<string> array_keys = latest_object->array_keys;
+
+    int string_count = latest_object->string_keys.size();
+    int number_count = latest_object->number_keys.size();
+    int bool_count = latest_object->boolean_keys.size();
+    int null_count = latest_object->null_keys.size();
+    int object_count = latest_object->object_keys.size();
+    int array_count = latest_object->array_keys.size();
+
+    map_string strings = latest_object->strings;
+    map_number numbers = latest_object->numbers;
+    map_bool bools = latest_object->booleans;
+    map_null nulls = latest_object->nulls;
+    map_object objects = latest_object->objects;
+    map_array arrays = latest_object->arrays;
+
+    int counts[6] = {string_count, number_count, bool_count, null_count,
+        object_count, array_count};
+
+    int accessed = 0;
+    int value_count = 0;
+
+    for(int i = 0; i < 6; i++)
+    {
+        if(counts[i] > 0)
+        {
+            accessed++;
+        }
+    }
+
+    for(int i = 0; i < 6; i++)
+    {
+        int check;
+
+        switch(i)
+        {
+        case(STRING):
+        {
+            check = string_count;
+            break;
+        }
+        case(NUMBER):
+        {
+            check = number_count;
+            break;
+        }
+        case(BOOL):
+        {
+            check = bool_count;
+            break;
+        }
+        case(NULL_):
+        {
+            check = null_count;
+            break;
+        }
+        case(OBJECT):
+        {
+            check = object_count;
+            break;
+        }
+        case(ARRAY):
+        {
+            check = array_count;
+            break;
+        }
+        }
+
+        if(check > 0)
+        {
+            value_count++;
+        }
+
+        for(int j = 0; j < check; j++)
+        {
+            string idx;
+            string value;
+
+            switch(i)
+            {
+            case(STRING):
+            {
+                idx = string_keys.at(j);
+                value = strings.at(idx);
+                json_output += "\"" + idx + "\":\"" + value + "\"";
+                break;
+            }
+            case(NUMBER):
+            {
+                idx = number_keys.at(j);
+                value = to_string(numbers.at(idx));
+                json_output += "\"" + idx + "\":" + value;
+                break;
+            }
+            case(BOOL):
+            {
+                idx = bool_keys.at(j);
+                value = to_string(bools.at(idx));
+                json_output +=  + "\"" + idx + "\":" + value;
+                break;
+            }
+            case(NULL_):
+            {
+                idx = null_keys.at(j);
+                value = to_string(nulls.at(idx));
+                json_output += "\"" + idx + "\":" + "null";
+                break;
+            }
+            case(OBJECT):
+            {
+                idx = object_keys.at(j);
+                latest_object = objects.at(idx);
+                json_output += "\"" + idx + "\":{";
+                output_json_obj();
+                json_output += "}";
+                latest_object = *latest_object->parent;
+                break;
+            }
+            case(ARRAY):
+            {
+                idx = array_keys.at(j);
+                latest_vector = arrays.at(idx);
+                json_output += "\"" + idx + "\":[";
+                output_json_arr();
+                json_output += "]";
+                latest_vector = *latest_vector->parent;
+                break;
+            }
+            }
+
+            if(j != check - 1)
+            {
+                json_output += ",";
+            }
+        }
+
+        if(check > 0 && value_count != accessed)
+        {
+           json_output += ",";
+        }
+    }
+}
+
+void json::output_json_arr()
+{
+    json_vector to_traverse = latest_vector->array;
+    int array_size = latest_vector->array.size();
+
+    for(int i = 0; i < array_size; i++)
+    {
+        string index = to_string(i);
+        string value;
+
+        json_array_item item = *to_traverse.at(i);
+        int type = item.type;
+
+        switch(type)
+        {
+        case(NUMBER):
+        {
+            double number = item.double_val;
+            value = to_string(number);
+
+            json_output +=  value;
+            break;
+        }
+        case(OBJECT):
+        {
+            shared_ptr<json_object> object = item.object_val;
+            latest_object = object;
+            json_output +=  "{";
+            output_json_obj();
+            json_output +=  "}";
+            latest_object = *latest_object->parent;
+            break;
+        }
+        case(ARRAY):
+        {
+            shared_ptr<json_array> array = item.array_val;
+            latest_vector = array;
+            json_output +=  "[";
+            output_json_arr();
+            json_output +=  "]";
+            latest_vector = *latest_vector->parent;
+            break;
+        }
+        case(STRING):
+        {
+            value = item.string_val;
+            json_output +=  "\"" + value + "\"";
+            break;
+        }
+        case(NULL_):
+        {
+            int null = item.null_val;
+            value = to_string(null);
+            json_output += value;
+            break;
+        }
+        case(BOOL):
+        {
+            int boolean = item.bool_val;
+            value = to_string(boolean);
+            json_output +=  value;
+            break;
+        }
+        }
+
+        if(i != array_size - 1)
+        {
+            json_output +=  ",";
+        }
+    }
 }
