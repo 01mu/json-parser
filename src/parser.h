@@ -62,14 +62,14 @@ typedef map<string, shared_ptr<json_object>> map_object;
 struct json_array
 {
     string key;
-    shared_ptr<json_array> * parent;
+    shared_ptr<json_array> parent;
     json_vector array;
 };
 
 struct json_object
 {
     string key;
-    shared_ptr<json_object> * parent;
+    shared_ptr<json_object> parent;
     vector<string> array_keys;
     vector<string> string_keys;
     vector<string> null_keys;
@@ -84,7 +84,7 @@ struct json_object
     map_object objects;
 };
 
-ofstream fout("results");
+ofstream fout("json-parser-manual");
 
 class json
 {
@@ -229,7 +229,7 @@ json::json(string file)
         }
         else
         {
-            object_keys_stack.push("");
+            object_keys_stack.push("[0]");
 
             traverse_array();
         }
@@ -801,7 +801,7 @@ void json::end_object()
 {
     if(latest_object->parent)
     {
-        latest_object = *latest_object->parent;
+        latest_object = latest_object->parent;
     }
 }
 
@@ -809,14 +809,14 @@ void json::end_array()
 {
     if(latest_vector->parent)
     {
-        latest_vector = *latest_vector->parent;
+        latest_vector = latest_vector->parent;
     }
 }
 
 void json::add_object(string key)
 {
     shared_ptr<json_object> newest (new json_object);
-    newest->parent = &latest_object;
+    newest->parent = latest_object;
     newest->key = key;
 
     latest_object->object_keys.push_back(key);
@@ -846,7 +846,7 @@ void json::add_boolean(string key, bool value)
 void json::add_array(string key)
 {
     shared_ptr<json_array> newest (new json_array);
-    newest->parent = &latest_vector;
+    newest->parent = latest_vector;
     newest->key = key;
 
     latest_object->array_keys.push_back(key);
@@ -913,7 +913,7 @@ void json::arr_add_object()
     else
     {
         shared_ptr<json_object> newest (new json_object);
-        newest->parent = &latest_object;
+        newest->parent = latest_object;
 
         shared_ptr<json_array_item> temp (new json_array_item);
 
@@ -938,7 +938,7 @@ void json::arr_add_array()
     else
     {
         shared_ptr<json_array> newest (new json_array);
-        newest->parent = &latest_vector;
+        newest->parent = latest_vector;
 
         shared_ptr<json_array_item> temp (new json_array_item);
 
@@ -1094,7 +1094,7 @@ void json::traverse_object(int mode)
 
                 traverse_object(0);
 
-                latest_object = *latest_object->parent;
+                latest_object = latest_object->parent;
                 break;
             }
             case(ARRAY):
@@ -1154,7 +1154,7 @@ void json::traverse_array()
             traverse_object(1);
             pop_object_stack();
 
-            latest_object = *latest_object->parent;
+            latest_object = latest_object->parent;
             break;
         }
         case(ARRAY):
@@ -1199,7 +1199,7 @@ void json::traverse_array()
 
     if(latest_vector->parent)
     {
-        latest_vector = *latest_vector->parent;
+        latest_vector = latest_vector->parent;
     }
 }
 
@@ -1381,7 +1381,7 @@ void json::output_json_obj()
                 json_output += "\"" + idx + "\":{";
                 output_json_obj();
                 json_output += "}";
-                latest_object = *latest_object->parent;
+                latest_object = latest_object->parent;
                 break;
             }
             case(ARRAY):
@@ -1391,7 +1391,7 @@ void json::output_json_obj()
                 json_output += "\"" + idx + "\":[";
                 output_json_arr();
                 json_output += "]";
-                latest_vector = *latest_vector->parent;
+                latest_vector = latest_vector->parent;
                 break;
             }
             }
@@ -1439,7 +1439,7 @@ void json::output_json_arr()
             json_output +=  "{";
             output_json_obj();
             json_output +=  "}";
-            latest_object = *latest_object->parent;
+            latest_object = latest_object->parent;
             break;
         }
         case(ARRAY):
@@ -1449,7 +1449,7 @@ void json::output_json_arr()
             json_output +=  "[";
             output_json_arr();
             json_output +=  "]";
-            latest_vector = *latest_vector->parent;
+            latest_vector = latest_vector->parent;
             break;
         }
         case(STRING):
