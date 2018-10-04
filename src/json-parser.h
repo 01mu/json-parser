@@ -104,10 +104,10 @@ private:
 
     int len;
 
-    int WIDTH = 35;
-    int NUM_WIDTH = 30;
-    int JWIDTH = 15;
-    int key_width = 0;
+    int WIDTH = 20;
+    int NUM_WIDTH = 25;
+    int JWIDTH = 10;
+    int key_width = 10;
 
     int string_count = 0;
     int bool_count = 0;
@@ -232,24 +232,6 @@ json::json(string file)
             object_keys_stack.push("[0]");
 
             traverse_array();
-        }
-
-        key_width += 5;
-
-        fout << endl << "--------------------------------"
-            "--------------------------------------------"
-            "--------------------------------------------"
-            << endl << endl;
-
-        fout << setw(key_width) << "- Location -" << "- Value -"
-            << endl << endl;
-
-        for(int i = 0; i < final_map.size(); i++)
-        {
-            string location = locations.at(i);
-
-            fout << setw(key_width) << location << final_map.at(location)
-                << endl;
         }
 
         show_stats();
@@ -683,35 +665,52 @@ void json::remove_blank_trail()
 
 void json::show_title()
 {
-    fout << "----------------------------------------------------------"
-        "--------------------------------------------------------------"
+    fout << "----------------------------------------"
+        "----------------------------------------"
         << endl << endl;
 
     fout << "JSON Parser" << endl;
     fout << "Version 0.1" << endl << endl;
     fout << "Parses valid JSON." << endl << endl;
 
-    fout << "----------------------------------------------------------"
-        "--------------------------------------------------------------"
+    fout << "----------------------------------------"
+        "----------------------------------------"
         << endl << endl;
 
     fout << "File: " << file << endl;
     fout << "Length: " << len << endl << endl;
 
-    fout << "----------------------------------------------------------"
-        "--------------------------------------------------------------"
+    fout << "----------------------------------------"
+        "----------------------------------------"
         << endl << endl;
 
-    fout << setw(WIDTH) << "- Key -" << setw(WIDTH) << "- Value -"
-        << setw(NUM_WIDTH) << "- Array Depth -" << "- Object Depth -"
+    fout << setw(WIDTH) << "Key" << setw(WIDTH) << "Value"
+        << setw(NUM_WIDTH) << "Array Depth" << "Object Depth"
         << endl << endl;
 }
 
 void json::show_stats()
 {
-    fout << endl << "------------------------------------------------------"
-        "------------------------------------------------------------------"
+    key_width += 5;
+
+    fout << endl << "----------------------------------------"
+        "----------------------------------------"
         << endl << endl;
+
+    fout << setw(key_width) << "Location" << "Value"
+        << endl << endl;
+
+    for(int i = 0; i < final_map.size(); i++)
+    {
+        string location = locations.at(i);
+
+        fout << setw(key_width) << location << final_map.at(location)
+            << endl;
+    }
+
+    fout << endl << "----------------------------------------"
+        "----------------------------------------"
+        << endl << endl << "Stats" << endl << endl;
 
     fout << setw(WIDTH) << "Key count: " << setw(WIDTH) << key_count;
     fout << setw(WIDTH) << "Decimal count: " << decimal_count << endl;
@@ -724,9 +723,9 @@ void json::show_stats()
     fout << setw(WIDTH) << "Null count: " << setw(WIDTH) << null_count;
     fout << setw(WIDTH) << "Parse count: " << parse_count << endl << endl;
 
-    fout << "----------------------------------------------------------"
-        "--------------------------------------------------------------"
-        << endl << endl;
+    fout << "----------------------------------------"
+        "----------------------------------------"
+        << endl;
 }
 
 void json::update_obj_depth(char type)
@@ -1253,7 +1252,7 @@ void json::output_json_file()
         json_output += "]";
     }
 
-    std::ofstream out("json_new");
+    std::ofstream out("json-parser-new");
 
     out << json_output;
     out.close();
