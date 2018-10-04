@@ -28,51 +28,50 @@ Parses valid JSON and displays values by object/array location.
 ```
 ### Output: results.txt
 ```
-------------------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 
 JSON Parser
 Version 0.1
 
 Parses valid JSON.
 
-------------------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 
 File: json.txt
-Length: 582
+Length: 706
 
-------------------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 
-- Key -                            - Value -                          - Array Depth -               - Object Depth -
+Key                 Value               Array Depth              Object Depth
 
-                                   {object start}                     0                             1
-glossary:                          {object start}                     0                             2
-title:                             "example glossary"                                                              
-GlossDiv:                          {object start}                     0                             3
-title:                             "S"                                                                             
-GlossList:                         {object start}                     0                             4
-GlossEntry:                        {object start}                     0                             5
-ID:                                "SGML"                                                                          
-SortAs:                            "SGML"                                                                          
-GlossTerm:                         "Standard Generalized Markup L..."                                              
-Acronym:                           "SGML"                                                                          
-Abbrev:                            "ISO 8879:1986"                                                                 
-GlossDef:                          {object start}                     0                             6
-para:                              "A meta-markup language, used ..."                                              
-GlossSeeAlso:                      [array start]                      1                             6
-                                   "GML"
-                                   "XML"
-                                   [array end]                        0                             6
-                                   {object end}                       0                             5
-GlossSee:                          "markup"                                                                        
-                                   {object end}                       0                             4
-                                   {object end}                       0                             3
-                                   {object end}                       0                             2
-                                   {object end}                       0                             1
-                                   {object end}                       0                             0
+                    {object start}      0                        1
+glossary:           {object start}      0                        2
+title:              "example glossa..."                                    
+GlossDiv:           {object start}      0                        3
+title:              "S"                                                    
+GlossList:          {object start}      0                        4
+GlossEntry:         {object start}      0                        5
+ID:                 "SGML"                                                 
+SortAs:             "SGML"                                                 
+GlossTerm:          "Standard Gener..."                                    
+Acronym:            "SGML"                                                 
+Abbrev:             "ISO 8879:1986"                                        
+GlossDef:           {object start}      0                        6
+para:               "A meta-markup ..."                                    
+GlossSeeAlso:       [array start]       1                        6
+                    "GML"
+                    "XML"
+                    [array end]         0                        6
+                    {object end}        0                        5
+GlossSee:           "markup"                                               
+                    {object end}        0                        4
+                    {object end}        0                        3
+                    {object end}        0                        2
+                    {object end}        0                        1
 
-------------------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 
-- Location -                                                               - Value -
+Location                                                                   Value
 
 [glossary][GlossDiv][GlossList][GlossEntry][GlossDef][GlossSeeAlso][0]     GML
 [glossary][GlossDiv][GlossList][GlossEntry][GlossDef][GlossSeeAlso][1]     XML
@@ -86,15 +85,17 @@ GlossSee:                          "markup"
 [glossary][GlossDiv][title]                                                S
 [glossary][title]                                                          example glossary
 
-------------------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 
-Key count:                         15                                 Decimal count:                     0
-Object count:                      6                                  Boolean count:                     0
-Array count:                       1                                  Max array depth:                   1
-String count:                      11                                 Max object depth:                  6
-Null count:                        0                                  Parse count:                       50
+Stats
 
-------------------------------------------------------------------------------------------------------------------------
+Key count:          15                  Decimal count:      0
+Object count:       6                   Boolean count:      0
+Array count:        1                   Max array depth:    1
+String count:       11                  Max object depth:   6
+Null count:         0                   Parse count:        50
+
+--------------------------------------------------------------------------------
 ```
 ## Accessing a value by key and location
 ### main.cpp
