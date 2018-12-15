@@ -13,6 +13,9 @@
 #include <fstream>
 #include <sstream>
 #include <memory>
+#include <stdio.h>
+#include <string.h>
+#include <curl/curl.h>
 
 const int NUMBER = 0;
 const int OBJECT = 1;
@@ -132,7 +135,7 @@ private:
     int first_type = 0;
 
 public:
-    json(string file, bool print_history);
+    json(string file, bool print_history, int web);
 
     void parse();
     void check_key();
@@ -184,9 +187,18 @@ public:
     void output_json_arr();
 };
 
-json::json(string file, bool print_history)
+json::json(string file, bool print_history, int web)
 {
     cout << setiosflags(ios::left);
+
+    if(web)
+    {
+        json_text = file;
+    }
+    else
+    {
+        json_text = get_file(file);
+    }
 
     if(print_history)
     {
@@ -194,8 +206,6 @@ json::json(string file, bool print_history)
             << setw(NUM_WIDTH) << "Array Depth" << "Object Depth"
             << endl << endl;
     }
-
-    json_text = get_file(file);
 
     this->print_history = print_history;
     this->file = file;
