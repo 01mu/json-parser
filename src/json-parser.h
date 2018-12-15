@@ -1,9 +1,5 @@
 /*
-* JSON Parser
-* Version 0.1
-*
-* Parses valid JSON.
-*
+* json-parser
 * github.com/01mu
 */
 
@@ -34,7 +30,6 @@ struct json_array;
 struct json_array_item
 {
     int type;
-
     shared_ptr<json_object> object_val;
     shared_ptr<json_array> array_val;
     int null_val;
@@ -84,13 +79,12 @@ struct json_object
     map_object objects;
 };
 
-ofstream fout("json-parser-manual");
-
 class json
 {
 private:
     string json_output = "";
 
+    bool print_history;
     int index = 0;
 
     string file;
@@ -138,12 +132,13 @@ private:
     int first_type = 0;
 
 public:
-    json(string file);
+    json(string file, bool print_history);
 
     void parse();
     void check_key();
     void show_title();
     void show_stats();
+    void show_result();
 
     string get_file(string file_name);
     string get_string();
@@ -156,22 +151,22 @@ public:
 
     void update_arr_depth(char type);
     void update_obj_depth(char type);
-    string make_ellipses(string str, char type);
+    string make_ellipses(string & str, char type);
     string get(string location);
 
     void update_display_width(string key);
 
-    void add_object(string key);
-    void add_string(string key, string value);
-    void add_number(string key, double value);
-    void add_boolean(string key, bool value);
-    void add_array(string key);
-    void add_null(string key);
+    void add_object(string & key);
+    void add_string(string & key, string & value);
+    void add_number(string & key, double value);
+    void add_boolean(string & key, bool value);
+    void add_array(string & key);
+    void add_null(string & key);
 
     void end_object();
 
     void arr_add_object();
-    void arr_add_string(string value);
+    void arr_add_string(string & value);
     void arr_add_number(double value);
     void arr_add_boolean(bool value);
     void arr_add_array();
@@ -189,16 +184,23 @@ public:
     void output_json_arr();
 };
 
-json::json(string file)
+json::json(string file, bool print_history)
 {
-    fout << setiosflags(ios::left);
+    cout << setiosflags(ios::left);
+
+    if(print_history)
+    {
+        cout << setw(WIDTH) << "Key" << setw(WIDTH) << "Value"
+            << setw(NUM_WIDTH) << "Array Depth" << "Object Depth"
+            << endl << endl;
+    }
 
     json_text = get_file(file);
 
+    this->print_history = print_history;
     this->file = file;
-    len = json_text.size();
 
-    show_title();
+    len = json_text.size();
 
     remove_blank_leading();
     remove_blank_trail();
@@ -234,11 +236,11 @@ json::json(string file)
             traverse_array();
         }
 
-        show_stats();
+        //show_stats();
     }
     else
     {
-        fout << json_text;
+        cout << json_text;
     }
 
     reset();
@@ -260,8 +262,11 @@ void json::parse()
 
         decimal_count++;
 
-        fout << setw(WIDTH) << " " << setw(WIDTH) << value << setw(NUM_WIDTH)
-            << " " << setw(NUM_WIDTH) << " " << endl;
+        if(print_history)
+        {
+            cout << setw(WIDTH) << " " << setw(WIDTH) << value
+                << setw(NUM_WIDTH) << " " << setw(NUM_WIDTH) << " " << endl;
+        }
 
         arr_add_number(stod(value));
     }
@@ -270,7 +275,10 @@ void json::parse()
         null_count++;
         index = index + 4;
 
-        fout << setw(WIDTH) << " " << setw(WIDTH) << "null" << endl;
+        if(print_history)
+        {
+            cout << setw(WIDTH) << " " << setw(WIDTH) << "null" << endl;
+        }
 
         arr_add_null();
     }
@@ -280,8 +288,11 @@ void json::parse()
 
         bool_count++;
 
-        fout << setw(WIDTH) << " " << setw(WIDTH) << str << setw(NUM_WIDTH)
-            << " " << setw(NUM_WIDTH) << " " << endl;
+        if(print_history)
+        {
+            cout << setw(WIDTH) << " " << setw(WIDTH) << str << setw(NUM_WIDTH)
+                << " " << setw(NUM_WIDTH) << " " << endl;
+        }
 
         arr_add_boolean(true);
     }
@@ -291,8 +302,11 @@ void json::parse()
 
         bool_count++;
 
-        fout << setw(WIDTH) << " " << setw(WIDTH) << str << setw(NUM_WIDTH)
-            << " "<< setw(NUM_WIDTH) << " " << endl;
+        if(print_history)
+        {
+            cout << setw(WIDTH) << " " << setw(WIDTH) << str << setw(NUM_WIDTH)
+                << " "<< setw(NUM_WIDTH) << " " << endl;
+        }
 
         arr_add_boolean(false);
     }
@@ -304,7 +318,10 @@ void json::parse()
         {
             key_count++;
 
-            fout << setw(WIDTH) << make_ellipses(str, 'k');
+            if(print_history)
+            {
+                cout << setw(WIDTH) << make_ellipses(str, 'k');
+            }
 
             last_key_name = str;
         }
@@ -312,7 +329,10 @@ void json::parse()
         {
             string_count++;
 
-            fout << setw(WIDTH) << " " << make_ellipses(str, 'v') << endl;
+            if(print_history)
+            {
+                cout << setw(WIDTH) << " " << make_ellipses(str, 'v') << endl;
+            }
 
             arr_add_string(str);
         }
@@ -324,8 +344,11 @@ void json::parse()
 
         update_obj_depth('i');
 
-        fout << setw(WIDTH) << " " << setw(WIDTH) << "{object start}"
-            << setw(NUM_WIDTH) << array_depth << object_depth << endl;
+        if(print_history)
+        {
+            cout << setw(WIDTH) << " " << setw(WIDTH) << "{object start}"
+                << setw(NUM_WIDTH) << array_depth << object_depth << endl;
+        }
 
         arr_add_object();
     }
@@ -335,8 +358,11 @@ void json::parse()
 
         update_obj_depth('d');
 
-        fout << setw(WIDTH) << " " << setw(WIDTH) << "{object end}"
-            << setw(NUM_WIDTH) << array_depth << object_depth << endl;
+        if(print_history)
+        {
+            cout << setw(WIDTH) << " " << setw(WIDTH) << "{object end}"
+                << setw(NUM_WIDTH) << array_depth << object_depth << endl;
+        }
 
         end_object();
     }
@@ -347,8 +373,11 @@ void json::parse()
 
         update_arr_depth('i');
 
-        fout << setw(WIDTH) << " " << setw(WIDTH) << "[array start]"
-            << setw(NUM_WIDTH) << array_depth << object_depth << endl;
+        if(print_history)
+        {
+            cout << setw(WIDTH) << " " << setw(WIDTH) << "[array start]"
+                << setw(NUM_WIDTH) << array_depth << object_depth << endl;
+        }
 
         arr_add_array();
     }
@@ -358,8 +387,11 @@ void json::parse()
 
         update_arr_depth('d');
 
-        fout << setw(WIDTH) << " " << setw(WIDTH) << "[array end]"
-            << setw(NUM_WIDTH) << array_depth << object_depth << endl;
+        if(print_history)
+        {
+            cout << setw(WIDTH) << " " << setw(WIDTH) << "[array end]"
+                << setw(NUM_WIDTH) << array_depth << object_depth << endl;
+        }
 
         end_array();
     }
@@ -387,8 +419,11 @@ void json::check_key()
 
         string_count++;
 
-        fout << setw(WIDTH) << make_ellipses(str, 'v') << setw(NUM_WIDTH)
-            << " " << setw(JWIDTH) << " " << endl;
+        if(print_history)
+        {
+            cout << setw(WIDTH) << make_ellipses(str, 'v') << setw(NUM_WIDTH)
+                << " " << setw(JWIDTH) << " " << endl;
+        }
 
         add_string(last_key_name, str);
     }
@@ -398,8 +433,11 @@ void json::check_key()
 
         bool_count++;
 
-        fout << setw(WIDTH) << str << setw(NUM_WIDTH) << " " << setw(JWIDTH)
-            << " " << endl;
+        if(print_history)
+        {
+            cout << setw(WIDTH) << str << setw(NUM_WIDTH) << " " << setw(JWIDTH)
+                << " " << endl;
+        }
 
         add_boolean(last_key_name, true);
     }
@@ -409,8 +447,11 @@ void json::check_key()
 
         bool_count++;
 
-        fout << setw(WIDTH) << str << setw(NUM_WIDTH) << " " << setw(JWIDTH)
-            << " " << endl;
+        if(print_history)
+        {
+            cout << setw(WIDTH) << str << setw(NUM_WIDTH) << " " << setw(JWIDTH)
+                << " " << endl;
+        }
 
         add_boolean(last_key_name, false);
     }
@@ -419,7 +460,10 @@ void json::check_key()
         null_count++;
         index = index + 4;
 
-        fout << setw(WIDTH) << "null" << endl;
+        if(print_history)
+        {
+            cout << setw(WIDTH) << "null" << endl;
+        }
 
         add_null(last_key_name);
     }
@@ -429,8 +473,11 @@ void json::check_key()
 
         decimal_count++;
 
-        fout << setw(WIDTH) << value << setw(NUM_WIDTH) << " "
-            << setw(JWIDTH) << " " << endl;
+        if(print_history)
+        {
+            cout << setw(WIDTH) << value << setw(NUM_WIDTH) << " "
+                << setw(JWIDTH) << " " << endl;
+        }
 
         add_number(last_key_name, stod(value));
     }
@@ -441,8 +488,11 @@ void json::check_key()
 
         update_obj_depth('i');
 
-        fout << setw(WIDTH) << "{object start}" << setw(NUM_WIDTH)
-            << array_depth << object_depth << endl;
+        if(print_history)
+        {
+            cout << setw(WIDTH) << "{object start}" << setw(NUM_WIDTH)
+                << array_depth << object_depth << endl;
+        }
 
         add_object(last_key_name);
     }
@@ -453,8 +503,11 @@ void json::check_key()
 
         update_arr_depth('i');
 
-        fout << "" << setw(WIDTH) << "[array start]" << setw(NUM_WIDTH)
-            << array_depth << object_depth << endl;
+        if(print_history)
+        {
+            cout << "" << setw(WIDTH) << "[array start]" << setw(NUM_WIDTH)
+                << array_depth << object_depth << endl;
+        }
 
         add_array(last_key_name);
     }
@@ -663,69 +716,31 @@ void json::remove_blank_trail()
     }
 }
 
-void json::show_title()
-{
-    fout << "----------------------------------------"
-        "----------------------------------------"
-        << endl << endl;
-
-    fout << "JSON Parser" << endl;
-    fout << "Version 0.1" << endl << endl;
-    fout << "Parses valid JSON." << endl << endl;
-
-    fout << "----------------------------------------"
-        "----------------------------------------"
-        << endl << endl;
-
-    fout << "File: " << file << endl;
-    fout << "Length: " << len << endl << endl;
-
-    fout << "----------------------------------------"
-        "----------------------------------------"
-        << endl << endl;
-
-    fout << setw(WIDTH) << "Key" << setw(WIDTH) << "Value"
-        << setw(NUM_WIDTH) << "Array Depth" << "Object Depth"
-        << endl << endl;
-}
-
-void json::show_stats()
+void json::show_result()
 {
     key_width += 5;
-
-    fout << endl << "----------------------------------------"
-        "----------------------------------------"
-        << endl << endl;
-
-    fout << setw(key_width) << "Location" << "Value"
-        << endl << endl;
 
     for(int i = 0; i < final_map.size(); i++)
     {
         string location = locations.at(i);
 
-        fout << setw(key_width) << location << final_map.at(location)
+        cout << setw(key_width) << location << final_map.at(location)
             << endl;
     }
+}
 
-    fout << endl << "----------------------------------------"
-        "----------------------------------------"
-        << endl << endl << "Stats" << endl << endl;
-
-    fout << setw(WIDTH) << "Key count: " << setw(WIDTH) << key_count;
-    fout << setw(WIDTH) << "Decimal count: " << decimal_count << endl;
-    fout << setw(WIDTH) << "Object count: " << setw(WIDTH) << object_count;
-    fout << setw(WIDTH) << "Boolean count: " << bool_count << endl;
-    fout << setw(WIDTH) << "Array count: " << setw(WIDTH) << array_count;
-    fout << setw(WIDTH) << "Max array depth: " << array_depth_max << endl;
-    fout << setw(WIDTH) << "String count: " << setw(WIDTH) << string_count;
-    fout << setw(WIDTH) << "Max object depth: " << object_depth_max << endl;
-    fout << setw(WIDTH) << "Null count: " << setw(WIDTH) << null_count;
-    fout << setw(WIDTH) << "Parse count: " << parse_count << endl << endl;
-
-    fout << "----------------------------------------"
-        "----------------------------------------"
-        << endl;
+void json::show_stats()
+{
+    cout << setw(WIDTH) << "Key count: " << setw(WIDTH) << key_count;
+    cout << setw(WIDTH) << "Decimal count: " << decimal_count << endl;
+    cout << setw(WIDTH) << "Object count: " << setw(WIDTH) << object_count;
+    cout << setw(WIDTH) << "Boolean count: " << bool_count << endl;
+    cout << setw(WIDTH) << "Array count: " << setw(WIDTH) << array_count;
+    cout << setw(WIDTH) << "Max array depth: " << array_depth_max << endl;
+    cout << setw(WIDTH) << "String count: " << setw(WIDTH) << string_count;
+    cout << setw(WIDTH) << "Max object depth: " << object_depth_max << endl;
+    cout << setw(WIDTH) << "Null count: " << setw(WIDTH) << null_count;
+    cout << setw(WIDTH) << "Parse count: " << parse_count << endl << endl;
 }
 
 void json::update_obj_depth(char type)
@@ -762,7 +777,7 @@ void json::update_arr_depth(char type)
     }
 }
 
-string json::make_ellipses(string str, char type)
+string json::make_ellipses(string & str, char type)
 {
     string res;
 
@@ -812,7 +827,7 @@ void json::end_array()
     }
 }
 
-void json::add_object(string key)
+void json::add_object(string & key)
 {
     shared_ptr<json_object> newest (new json_object);
     newest->parent = latest_object;
@@ -824,25 +839,25 @@ void json::add_object(string key)
     latest_object = newest;
 }
 
-void json::add_string(string key, string value)
+void json::add_string(string & key, string & value)
 {
     latest_object->string_keys.push_back(key);
     latest_object->strings.insert(pair_string(key, value));
 }
 
-void json::add_number(string key, double value)
+void json::add_number(string & key, double value)
 {
     latest_object->number_keys.push_back(key);
     latest_object->numbers.insert(pair_number(key, value));
 }
 
-void json::add_boolean(string key, bool value)
+void json::add_boolean(string & key, bool value)
 {
     latest_object->boolean_keys.push_back(key);
     latest_object->booleans.insert(pair_bool(key, value));
 }
 
-void json::add_array(string key)
+void json::add_array(string & key)
 {
     shared_ptr<json_array> newest (new json_array);
     newest->parent = latest_vector;
@@ -854,13 +869,13 @@ void json::add_array(string key)
     latest_vector = newest;
 }
 
-void json::add_null(string key)
+void json::add_null(string & key)
 {
     latest_object->null_keys.push_back(key);
     latest_object->nulls.insert(pair_bool(key, 0));
 }
 
-void json::arr_add_string(string value)
+void json::arr_add_string(string & value)
 {
     shared_ptr<json_array_item> temp (new json_array_item);
 
