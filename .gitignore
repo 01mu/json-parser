@@ -2,3 +2,4 @@ src/build
 src/a.out
 src/json
 src/core
+src/json-parser.h.gch
