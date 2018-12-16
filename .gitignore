@@ -1,5 +1,5 @@
-src/build
-src/a.out
-src/json
-src/core
+build
+json
+input
+core
 src/json-parser.h.gch
