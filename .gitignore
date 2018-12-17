@@ -1,5 +1,4 @@
 build
 json
-input
 core
-src/json-parser.h.gch
+vgcore.*
