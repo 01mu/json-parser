@@ -86,3 +86,40 @@ Max object depth: 3
 Null count: 0
 Parse count: 66
 ```
+### Getting JSON from a URL
+```c++
+
+#include <iostream>
+
+#include "json-parser.cpp"
+
+using namespace std;
+
+int main()
+{
+    const char * src = "https://www.reddit.com/r/self/.json";
+
+    json thing = json(src, 0);
+
+    thing.show_result();
+
+    return 0;
+}
+```
+```
+[data][dist]                                                  25.000000
+[data][children][0][data][gilded]                             0.000000
+[data][children][0][data][pwls]                               6.000000
+[data][children][0][data][downs]                              0.000000
+[data][children][0][data][ups]                                688.000000
+[data][children][0][data][score]                              688.000000
+
+(...)
+
+[data][children][24][data][is_video]                          0
+[data][children][24][kind]                                    t3
+[data][modhash]
+[data][after]                                                 t3_a6vt1g
+[data][before]                                                0
+[kind]                                                        Listing
+```

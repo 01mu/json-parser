@@ -1,0 +1,2 @@
+g++ -o json src/main.cpp src/json-parser.h -lcurl -Ofast
+./json $1

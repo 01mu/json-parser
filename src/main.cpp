@@ -11,16 +11,11 @@ using namespace std;
 
 int main()
 {
-    //const char * src = "https://www.reddit.com/r/self/.json";
-    const char * src = "input";
+    const char * src = "https://www.reddit.com/r/self/.json";
 
     json thing = json(src, 0);
 
-    cout << "JSON: " << endl;
     thing.show_result();
-
-    cout << endl << "Stats: " << endl;
-    thing.show_stats();
 
     return 0;
 }
