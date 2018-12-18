@@ -5,7 +5,48 @@
 
 #include "json-parser.h"
 
-json::json(const char * file, bool print_history)
+json::json()
+{
+    cout << setiosflags(ios::left);
+}
+
+void json::init_end()
+{
+    reset();
+
+    if(first_type == OBJECT)
+    {
+        traverse_object(0);
+    }
+    else
+    {
+        object_keys_stack.push("[0]");
+
+        traverse_array();
+    }
+
+    reset();
+}
+
+void json::init_array()
+{
+    first_type = ARRAY;
+    shared_ptr<json_array> bv (new json_array);
+    latest_vector = bv;
+    base_vector = bv;
+    first_vector = 1;
+}
+
+void json::init_object()
+{
+    first_type = OBJECT;
+    shared_ptr<json_object> bo (new json_object);
+    latest_object = bo;
+    base_object = bo;
+    first_object = 1;
+}
+
+void json::get_json(const char * file, bool print_history)
 {
     int web;
     string text;
@@ -1101,7 +1142,7 @@ string json::get(string location)
     return final_map.at(location);
 }
 
-void json::output_json_file()
+void json::init_output()
 {
     if(first_type == OBJECT)
     {
@@ -1120,10 +1161,8 @@ void json::output_json_file()
         json_output += "]";
     }
 
-    std::ofstream out("json-parser-new");
 
-    out << json_output;
-    out.close();
+    cout << json_output;
 }
 
 void json::output_json_obj()

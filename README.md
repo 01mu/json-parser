@@ -33,7 +33,6 @@ Source: http://json.org/example.html
 ```
 ```c++
 #include <iostream>
-
 #include "json-parser.cpp"
 
 using namespace std;
@@ -88,9 +87,7 @@ Parse count: 66
 ```
 ### Getting JSON from a URL
 ```c++
-
 #include <iostream>
-
 #include "json-parser.cpp"
 
 using namespace std;
@@ -122,4 +119,103 @@ int main()
 [data][after]                                                 t3_a6vt1g
 [data][before]                                                0
 [kind]                                                        Listing
+```
+### Creating JSON from values
+```c++
+#include <iostream>
+#include "lib/json-parser.cpp"
+
+using namespace std;
+
+int main()
+{
+    json other = json();
+
+    string strings[10] = {"a", "b", "c", "d", "e", "f", "g", "h", "i", "j"};
+
+    /* initialize root object */
+    other.init_object();
+
+    /* create child object */
+    other.add_object(strings[0]);
+
+    /* add two strings to child object */
+    other.add_string(strings[1], strings[2]);
+    other.add_string(strings[3], strings[4]);
+
+    /* end child object */
+    other.end_object();
+
+    /* create child array */
+    other.add_array(strings[5]);
+
+    /* add values to child array */
+    for(int i = 0; i < 10; i++)
+    {
+        other.arr_add_number(i);
+    }
+
+    /* create array in array */
+    other.arr_add_array();
+
+    /* add values */
+    for(int i = 0; i < 10; i++)
+    {
+        other.arr_add_number(i);
+
+    }
+
+    /* end array in array */
+    other.end_array();
+
+    /* end child array */
+    other.end_array();
+
+    /* add bool to root object */
+    other.add_boolean(strings[6], false);
+
+    /* end root initialized object */
+    other.end_object();
+
+    /* display */
+    other.init_output();
+
+    cout << endl << endl << "JSON:" << endl;
+
+    /* setup key values */
+    other.init_end();
+
+    /* display */
+    other.show_result();
+
+    return 0;
+}
+```
+```
+{"a":{"b":"c","d":"e"},"f":[0.000000,1.000000,2.000000,3.000000,4.000000,5.000000,6.000000,7.000000,8.000000,9.000000,[0.000000,1.000000,2.000000,3.000000,4.000000,5.000000,6.000000,7.000000,8.000000,9.000000]],"g":0}
+
+JSON:
+[a][b]         c
+[a][d]         e
+[f][0]         0.000000
+[f][1]         1.000000
+[f][2]         2.000000
+[f][3]         3.000000
+[f][4]         4.000000
+[f][5]         5.000000
+[f][6]         6.000000
+[f][7]         7.000000
+[f][8]         8.000000
+[f][9]         9.000000
+[f][10][0]     0.000000
+[f][10][1]     1.000000
+[f][10][2]     2.000000
+[f][10][3]     3.000000
+[f][10][4]     4.000000
+[f][10][5]     5.000000
+[f][10][6]     6.000000
+[f][10][7]     7.000000
+[f][10][8]     8.000000
+[f][10][9]     9.000000
+[g]            0
 ```

@@ -138,7 +138,9 @@ private:
     int first_type = 0;
 
 public:
-    json(const char * file, bool print_history);
+    json();
+
+    void get_json(const char * file, bool print_history);
 
     void parse();
     void check_key();
@@ -185,7 +187,11 @@ public:
     void reset();
     void pop_object_stack();
 
-    void output_json_file();
+    void init_output();
+    void init_end();
+    void init_object();
+    void init_array();
+
     void output_json_obj();
     void output_json_arr();
 
