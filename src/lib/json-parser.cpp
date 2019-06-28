@@ -10,6 +10,11 @@ json::json()
     cout << setiosflags(ios::left);
 }
 
+void json::set_latest_obj(shared_ptr<json_object> obj)
+{
+    latest_object = obj;
+}
+
 void json::init_end()
 {
     reset();
@@ -721,7 +726,7 @@ void json::end_array()
     }
 }
 
-void json::add_object(string & key)
+shared_ptr<json_object> json::add_object(string & key)
 {
     shared_ptr<json_object> newest (new json_object);
     newest->parent = latest_object;
@@ -731,6 +736,8 @@ void json::add_object(string & key)
     latest_object->objects.insert(pair_object(key, newest));
 
     latest_object = newest;
+
+    return newest;
 }
 
 void json::add_string(string & key, string & value)

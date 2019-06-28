@@ -10,64 +10,18 @@ using namespace std;
 
 int main()
 {
-    json other = json();
+    //const char * src = "https://www.reddit.com/r/self/.json";
+    const char * src = "input";
 
-    string strings[10] = {"a", "b", "c", "d", "e", "f", "g", "h", "i", "j"};
+    json thing = json();
 
-    /* initialize root object */
-    other.init_object();
+    thing.get_json(src, 0);
 
-    /* create child object */
-    other.add_object(strings[0]);
+    cout << "JSON: " << endl;
+    thing.show_result();
 
-    /* add two strings to child object */
-    other.add_string(strings[1], strings[2]);
-    other.add_string(strings[3], strings[4]);
-
-    /* end child object */
-    other.end_object();
-
-    /* create child array */
-    other.add_array(strings[5]);
-
-    /* add values to child array */
-    for(int i = 0; i < 10; i++)
-    {
-        other.arr_add_number(i);
-    }
-
-    /* create array in array */
-    other.arr_add_array();
-
-    /* add values */
-    for(int i = 0; i < 10; i++)
-    {
-        other.arr_add_number(i);
-
-    }
-
-    /* end array in array */
-    other.end_array();
-
-    /* end child array */
-    other.end_array();
-
-    /* add bool to root object */
-    other.add_boolean(strings[6], false);
-
-    /* end root initialized object */
-    other.end_object();
-
-    /* display */
-    other.init_output();
-
-    cout << endl << endl << "JSON:" << endl;
-
-    /* setup key values */
-    other.init_end();
-
-    /* display */
-    other.show_result();
+    cout << endl << "Stats: " << endl;
+    thing.show_stats();
 
     return 0;
 }

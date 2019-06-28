@@ -140,6 +140,8 @@ private:
 public:
     json();
 
+    void set_latest_obj(shared_ptr<json_object> obj);
+
     void get_json(const char * file, bool print_history);
 
     void parse();
@@ -164,7 +166,7 @@ public:
 
     void update_display_width(string key);
 
-    void add_object(string & key);
+    shared_ptr<json_object> add_object(string & key);
     void add_string(string & key, string & value);
     void add_number(string & key, double value);
     void add_boolean(string & key, bool value);
